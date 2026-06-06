@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getDailyChallenge } from '../data/sessions';
 
+const PLANT_STAGES = {
+  1: '🌱', 2: '🌿', 3: '🪴', 4: '🌻', 5: '🌳',
+};
+
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const { profile, loading } = useProfile();
+  const [gardenSummary, setGardenSummary] = useState('🌱🌱🌱');
   const dailyChallenge = getDailyChallenge(profile?.niche || 'general');
+
+  useEffect(() => {
+    if (user) {
+      fetchGardenSummary();
+    }
+  }, [user]);
+
+  const fetchGardenSummary = async () => {
+    try {
+      const { data } = await supabase
+        .from('garden_plants')
+        .select('growth_stage')
+        .eq('user_id', user.id)
+        .limit(5);
+      
+      if (data && data.length > 0) {
+        const summary = data.map(p => PLANT_STAGES[p.growth_stage] || '🌱').join('');
+        setGardenSummary(summary);
+      }
+    } catch (err) {
+      console.error('Error fetching garden summary:', err);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -79,7 +107,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate('Progress')}
         >
           <Text style={styles.gardenTitle}>🌿 Mind Garden Mini</Text>
-          <Text style={styles.gardenPlants}>🌱🌻🌱🌸🌱</Text>
+          <Text style={styles.gardenPlants}>{gardenSummary}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
