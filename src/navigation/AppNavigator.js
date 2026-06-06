@@ -12,6 +12,8 @@ import MoodCheckInScreen from '../screens/MoodCheckInScreen';
 import SessionPlayerScreen from '../screens/SessionPlayerScreen';
 import PostSessionScreen from '../screens/PostSessionScreen';
 import SequenceBuilderScreen from '../screens/SequenceBuilderScreen';
+import DiscoverScreen from '../screens/DiscoverScreen';
+import ExportScreen from '../screens/ExportScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,13 +32,14 @@ const MainStack = () => (
     <Stack.Screen name="SessionPlayer" component={SessionPlayerScreen} />
     <Stack.Screen name="PostSession" component={PostSessionScreen} />
     <Stack.Screen name="SequenceBuilder" component={SequenceBuilderScreen} />
+    <Stack.Screen name="Discover" component={DiscoverScreen} />
+    <Stack.Screen name="Export" component={ExportScreen} />
   </Stack.Navigator>
 );
 
 const MainTabs = () => (
   <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeScreen} />
-    {/* Placeholder tabs for Explore, Progress, Profile as per wireframes */}
     <Tab.Screen name="Explore" component={HomeScreen} />
     <Tab.Screen name="Progress" component={HomeScreen} />
     <Tab.Screen name="Profile" component={HomeScreen} />

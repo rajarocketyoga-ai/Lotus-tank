@@ -102,6 +102,23 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.sequenceBuilderArrow}>→</Text>
         </TouchableOpacity>
 
+        {/* Discover Button */}
+        <TouchableOpacity
+          style={styles.discoverButton}
+          onPress={() => navigation.navigate('Discover')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View style={styles.discoverIcon}>
+              <Ionicons name="globe-outline" size={22} color="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.discoverTitle}>Discover Shared Flows</Text>
+              <Text style={styles.discoverDesc}>Browse and remix sequences from the community</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
+          </View>
+        </TouchableOpacity>
+
         {/* My Sequences Section */}
         <View style={styles.mySequencesSection}>
           <View style={styles.sectionHeader}>
@@ -304,6 +321,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  discoverButton: {
+    backgroundColor: '#1A659E',
+    padding: 16,
+    borderRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  discoverIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  discoverTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  discoverDesc: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+    marginTop: 2,
   },
   mySequencesSection: {
     backgroundColor: 'rgba(255,255,255,0.05)',

@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { POSES, ROCKET_SEQUENCES, BODY_PARTS, searchPoses } from '../data/poses';
 import { getModifications, getExperienceGuidance } from '../engine/modificationEngine';
 import { saveSequence, loadSequences, deleteSequence } from '../services/sequenceStorage';
+import { shareSequence } from '../services/sharingService';
 import { useAuth } from '../context/AuthContext';
 
 export default function SequenceBuilderScreen({ navigation }) {
@@ -134,6 +135,28 @@ export default function SequenceBuilderScreen({ navigation }) {
       Alert.alert('Save Error', 'Could not save the sequence. Please try again.');
     }
   }, [buildSequenceData, sequenceName, poses.length, totalDuration, user]);
+
+  // Share sequence
+  const handleShare = useCallback(async () => {
+    if (poses.length === 0) {
+      Alert.alert('Empty Sequence', 'Add at least one pose before sharing.');
+      return;
+    }
+    const sequence = buildSequenceData();
+    // First save it
+    await saveSequence(sequence, user?.id);
+    // Then share it
+    const result = await shareSequence(sequence, user?.id);
+    if (result.success) {
+      Alert.alert(
+        'Sequence Shared!',
+        `"${sequenceName}" is now public.\n\nShare link: ${result.shareUrl}\n\nOthers can discover and remix this flow.`,
+        [{ text: 'OK' }]
+      );
+    } else {
+      Alert.alert('Share Error', 'Could not share the sequence.');
+    }
+  }, [buildSequenceData, sequenceName, poses.length, user]);
 
   // Load a sequence from the saved list
   const handleLoadSequence = useCallback((seq) => {
@@ -376,6 +399,16 @@ export default function SequenceBuilderScreen({ navigation }) {
             }}
           >
             <Ionicons name="trash-outline" size={18} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleShare}
+            style={{
+              backgroundColor: '#FF6B35', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12,
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons name="share-social-outline" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
