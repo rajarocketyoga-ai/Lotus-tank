@@ -19,11 +19,16 @@ import { saveSequence, loadSequences, deleteSequence } from '../services/sequenc
 import { shareSequence } from '../services/sharingService';
 import { useAuth } from '../context/AuthContext';
 
-export default function SequenceBuilderScreen({ navigation }) {
+export default function SequenceBuilderScreen({ navigation, route }) {
   const { user } = useAuth();
-  const [sequenceName, setSequenceName] = useState('My Rocket Sequence');
-  const [poses, setPoses] = useState([]);
-  const [selectedSequence, setSelectedSequence] = useState(0);
+  const templateParam = route?.params?.template;
+  const [sequenceName, setSequenceName] = useState(templateParam ? `${templateParam.id?.replace('rocket-', 'Rocket ') || 'Rocket'} Template` : 'My Rocket Sequence');
+  const [poses, setPoses] = useState(templateParam ? templateParam.poses.map((p, i) => ({
+    ...p,
+    key: `template-${i}`,
+    target_body_parts: [],
+  })) : []);
+  const [selectedSequence, setSelectedSequence] = useState(templateParam ? parseInt(templateParam.icon || '1') : 0);
   const [activeFilters, setActiveFilters] = useState([]);
   const [experienceLevel, setExperienceLevel] = useState('intermediate');
   const [showPosePicker, setShowPosePicker] = useState(false);

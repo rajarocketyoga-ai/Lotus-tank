@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getDailyChallenge } from '../data/sessions';
 import { loadSequences } from '../services/sequenceStorage';
+import ROCKET_TEMPLATES from '../data/templates';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
@@ -88,6 +89,28 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.quickEmoji}>🤸</Text>
             <Text style={styles.quickText}>Move</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Instant Start: Official Rocket Templates */}
+        <Text style={styles.sectionTitle}>🚀 Instant Start</Text>
+        <Text style={{ color: '#A0AEC0', fontSize: 12, marginBottom: 12, marginTop: -10 }}>
+          Practice the official Raja Rocket sequences
+        </Text>
+        <View style={styles.templateRow}>
+          {Object.entries(ROCKET_TEMPLATES).map(([name, template]) => (
+            <TouchableOpacity
+              key={template.id}
+              onPress={() => navigation.navigate('SequenceBuilder', { template })}
+              style={[styles.templateCard, { backgroundColor: template.color }]}
+            >
+              <Text style={styles.templateIcon}>🧘</Text>
+              <Text style={styles.templateTitle}>{name}</Text>
+              <Text style={styles.templateDesc} numberOfLines={2}>
+                {template.description}
+              </Text>
+              <Text style={styles.templatePoses}>{template.poses.length} poses</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <TouchableOpacity
@@ -429,5 +452,39 @@ const styles = StyleSheet.create({
   gardenPlants: {
     fontSize: 20,
     letterSpacing: 5,
-  }
+  },
+  templateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  templateCard: {
+    flex: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginHorizontal: 3,
+    alignItems: 'center',
+  },
+  templateIcon: {
+    fontSize: 24,
+    marginBottom: 6,
+  },
+  templateTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  templateDesc: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 9,
+    textAlign: 'center',
+    lineHeight: 13,
+    marginBottom: 4,
+  },
+  templatePoses: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 10,
+    fontWeight: '600',
+  },
 });
