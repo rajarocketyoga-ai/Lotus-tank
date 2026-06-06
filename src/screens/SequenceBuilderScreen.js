@@ -417,6 +417,27 @@ export default function SequenceBuilderScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
+        {/* Start Practice Button */}
+        {poses.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <TouchableOpacity
+              onPress={() => {
+                const sequenceData = buildSequenceData();
+                navigation.navigate('MoodCheckIn', { session: sequenceData, type: 'pre' });
+              }}
+              style={{
+                backgroundColor: '#2ECC71', paddingVertical: 14, borderRadius: 12,
+                alignItems: 'center', flexDirection: 'row', justifyContent: 'center',
+                shadowColor: '#2ECC71', shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+              }}
+            >
+              <Ionicons name="play-circle" size={22} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16, marginLeft: 8 }}>▶ Start Practice</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Sequence List */}
         {poses.length === 0 ? (
           <View style={{ padding: 60, alignItems: 'center' }}>

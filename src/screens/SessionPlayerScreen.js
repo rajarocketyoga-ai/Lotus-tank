@@ -1,136 +1,244 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Animated, Easing } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  StyleSheet, Text, View, TouchableOpacity, SafeAreaView,
+  Animated, Easing, FlatList, Dimensions,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function SessionPlayerScreen({ navigation, route }) {
-  const { session, preMood } = route.params;
-  const [timeLeft, setTimeLeft] = useState(session.duration_seconds);
+  const { session: sequence, preMood } = route.params || {};
+  const poses = sequence?.poses || [];
+
+  const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
+  const [breathCount, setBreathCount] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [breathPhase, setBreathPhase] = useState('Inhale');
-  const [phaseSeconds, setBreathPhaseSeconds] = useState(4);
+  const [isComplete, setIsComplete] = useState(false);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const breathTimerRef = useRef(null);
 
+  const currentPose = poses[currentPoseIndex];
+  const totalBreaths = currentPose?.duration || 5;
+  const isLastPose = currentPoseIndex >= poses.length - 1;
+  const totalPoses = poses.length;
+
+  // Reset animation when pose changes
   useEffect(() => {
-    let timer = null;
-    if (isActive && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      handleComplete();
-    }
-    return () => clearInterval(timer);
-  }, [isActive, timeLeft]);
+    scaleAnim.setValue(1);
+    setBreathCount(0);
+  }, [currentPoseIndex]);
 
+  // Breath timer
   useEffect(() => {
-    if (session.type === 'breathing') {
-      runBreathCycle();
-    }
-  }, []);
+    if (!isActive || isComplete || !currentPose) return;
 
-  const runBreathCycle = () => {
-    // 4-7-8 pattern for demo if not specified
-    const pattern = session.instructions || [
-      { text: 'Inhale', duration: 4 },
-      { text: 'Hold', duration: 7 },
-      { text: 'Exhale', duration: 8 },
-    ];
+    const breathDuration = 4000; // 4 seconds per breath
 
-    let currentIdx = 0;
+    // Inhale animation
+    Animated.timing(scaleAnim, {
+      toValue: 1.5,
+      duration: breathDuration / 2,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
 
-    const nextPhase = () => {
-      if (!isActive) return;
-      
-      const phase = pattern[currentIdx];
-      setBreathPhase(phase.text);
-      setBreathPhaseSeconds(phase.duration);
+    // Exhale after inhale completes
+    const exhaleTimer = setTimeout(() => {
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: breathDuration / 2,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    }, breathDuration / 2);
 
-      // Animation
-      if (phase.text.toLowerCase().includes('in')) {
-        Animated.timing(scaleAnim, {
-          toValue: 2,
-          duration: phase.duration * 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }).start();
-      } else if (phase.text.toLowerCase().includes('out')) {
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: phase.duration * 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }).start();
+    // Advance breath count
+    breathTimerRef.current = setTimeout(() => {
+      const nextBreath = breathCount + 1;
+      if (nextBreath >= totalBreaths) {
+        // Move to next pose
+        if (isLastPose) {
+          handleComplete();
+        } else {
+          setCurrentPoseIndex(prev => prev + 1);
+        }
+      } else {
+        setBreathCount(nextBreath);
       }
+    }, breathDuration);
 
-      setTimeout(() => {
-        currentIdx = (currentIdx + 1) % pattern.length;
-        nextPhase();
-      }, phase.duration * 1000);
+    return () => {
+      clearTimeout(exhaleTimer);
+      if (breathTimerRef.current) clearTimeout(breathTimerRef.current);
+      scaleAnim.stopAnimation();
     };
+  }, [currentPoseIndex, breathCount, isActive, isComplete]);
 
-    nextPhase();
-  };
-
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
+    setIsComplete(true);
     setIsActive(false);
-    navigation.navigate('MoodCheckIn', { session, type: 'post', preMood });
+    navigation.navigate('MoodCheckIn', { session: sequence, type: 'post', preMood });
+  }, [navigation, sequence, preMood]);
+
+  const handleNext = () => {
+    if (isLastPose) {
+      handleComplete();
+    } else {
+      setCurrentPoseIndex(prev => prev + 1);
+      setBreathCount(0);
+    }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handlePrevious = () => {
+    if (currentPoseIndex > 0) {
+      setCurrentPoseIndex(prev => prev - 1);
+      setBreathCount(0);
+    }
   };
+
+  const handleStop = () => {
+    navigation.goBack();
+  };
+
+  const togglePause = () => {
+    setIsActive(prev => !prev);
+  };
+
+  const progressPercent = totalPoses > 0
+    ? ((currentPoseIndex + (breathCount / totalBreaths)) / totalPoses) * 100
+    : 0;
+
+  // If no poses, show a placeholder
+  if (!poses || poses.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#A0AEC0', fontSize: 16 }}>No poses in this sequence</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>Cancel</Text>
+        <TouchableOpacity onPress={handleStop} style={styles.headerButton}>
+          <Ionicons name="close" size={24} color="#A0AEC0" />
         </TouchableOpacity>
-        <Text style={styles.title}>{session.title}</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {sequence?.name || 'Practice'}
+        </Text>
+        <TouchableOpacity onPress={handleComplete} style={styles.headerButton}>
+          <Text style={styles.finishEarlyText}>Finish</Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.playerContent}>
-        <View style={styles.animationContainer}>
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+        </View>
+        <Text style={styles.progressText}>
+          {currentPoseIndex + 1}/{totalPoses}
+        </Text>
+      </View>
+
+      {/* Pose Display */}
+      <View style={styles.poseContainer}>
+        {/* Pose Icon */}
+        <View style={styles.iconCircle}>
+          <Text style={styles.poseIcon}>🧘</Text>
+        </View>
+
+        {/* Pose Name */}
+        <Text style={styles.poseName}>{currentPose?.english_name || 'Rest'}</Text>
+        <Text style={styles.poseSanskrit}>{currentPose?.sanskrit_name || ''}</Text>
+
+        {/* Breath Circle Animation */}
+        <View style={styles.breathContainer}>
           <Animated.View
-            style={[
-              styles.breathCircle,
-              { transform: [{ scale: scaleAnim }] }
-            ]}
+            style={[styles.breathCircle, { transform: [{ scale: scaleAnim }] }]}
           />
-          <View style={styles.textContainer}>
-            <Text style={styles.phaseText}>{breathPhase}</Text>
+          <View style={styles.breathTextContainer}>
+            <Text style={styles.breathLabel}>
+              {breathCount < totalBreaths ? 'Breathe' : 'Hold'}
+            </Text>
+            <Text style={styles.breathCount}>
+              {breathCount + 1} / {totalBreaths}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBarBackground}>
-            <View 
+        {/* Cue */}
+        {currentPose?.cue && (
+          <Text style={styles.cueText}>{currentPose.cue}</Text>
+        )}
+
+        {/* Body parts */}
+        {currentPose?.target_body_parts && currentPose.target_body_parts.length > 0 && (
+          <View style={styles.tagsRow}>
+            {currentPose.target_body_parts.slice(0, 3).map(bp => (
+              <View key={bp} style={styles.bodyPartTag}>
+                <Text style={styles.bodyPartTagText}>{bp}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Controls */}
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity
+          onPress={handlePrevious}
+          disabled={currentPoseIndex === 0}
+          style={[styles.sideButton, currentPoseIndex === 0 && styles.disabledButton]}
+        >
+          <Ionicons name="play-skip-back" size={24} color={currentPoseIndex === 0 ? '#555' : '#fff'} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={togglePause} style={styles.centerButton}>
+          <Ionicons name={isActive ? 'pause' : 'play'} size={32} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={handleNext} style={styles.sideButton}>
+          <Ionicons name="play-skip-forward" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom Pose List Preview */}
+      <View style={styles.poseStripContainer}>
+        <FlatList
+          data={poses}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              onPress={() => { setCurrentPoseIndex(index); setBreathCount(0); }}
               style={[
-                styles.progressBarFill, 
-                { width: `${((session.duration_seconds - timeLeft) / session.duration_seconds) * 100}%` }
-              ]} 
-            />
-          </View>
-          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-        </View>
-
-        <View style={styles.controls}>
-          <TouchableOpacity 
-            style={styles.controlButton} 
-            onPress={() => setIsActive(!isActive)}
-          >
-            <Text style={styles.controlButtonText}>{isActive ? 'Pause' : 'Resume'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.controlButton, styles.finishButton]} 
-            onPress={handleComplete}
-          >
-            <Text style={styles.controlButtonText}>Finish Early</Text>
-          </TouchableOpacity>
-        </View>
+                styles.poseStripItem,
+                index === currentPoseIndex && styles.poseStripItemActive,
+              ]}
+            >
+              <Text style={[
+                styles.poseStripNumber,
+                index === currentPoseIndex && styles.poseStripNumberActive,
+              ]}>
+                {index + 1}
+              </Text>
+              <Text style={[
+                styles.poseStripName,
+                index === currentPoseIndex && styles.poseStripNameActive,
+              ]} numberOfLines={1}>
+                {item.english_name}
+              </Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, idx) => `${idx}`}
+        />
       </View>
     </SafeAreaView>
   );
@@ -145,85 +253,194 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  backText: {
-    color: '#A0AEC0',
+  headerButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    color: '#F7F4EF',
     fontSize: 16,
-  },
-  title: {
-    color: '#F7F4EF',
-    fontSize: 18,
     fontWeight: 'bold',
-  },
-  playerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingBottom: 40,
+    textAlign: 'center',
   },
-  animationContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 300,
-    width: 300,
-  },
-  breathCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(74, 144, 217, 0.3)',
-    borderWidth: 2,
-    borderColor: '#4A90D9',
-  },
-  textContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  phaseText: {
-    color: '#F7F4EF',
-    fontSize: 24,
-    fontWeight: 'bold',
+  finishEarlyText: {
+    color: '#D4A843',
+    fontSize: 14,
+    fontWeight: '600',
   },
   progressContainer: {
-    width: '80%',
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
-  progressBarBackground: {
-    width: '100%',
-    height: 6,
+  progressBarBg: {
+    flex: 1,
+    height: 4,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
-    marginBottom: 10,
+    borderRadius: 2,
     overflow: 'hidden',
+    marginRight: 10,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#4A90D9',
+    backgroundColor: '#FF6B35',
+    borderRadius: 2,
   },
-  timerText: {
+  progressText: {
     color: '#A0AEC0',
-    fontSize: 18,
+    fontSize: 12,
+    fontWeight: '600',
+    width: 50,
+    textAlign: 'right',
   },
-  controls: {
-    flexDirection: 'row',
-    width: '80%',
-    justifyContent: 'space-between',
-  },
-  controlButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 12,
+  poseContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 20,
-    borderRadius: 20,
-    flex: 0.45,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(255,107,53,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  poseIcon: {
+    fontSize: 36,
+  },
+  poseName: {
+    color: '#F7F4EF',
+    fontSize: 26,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  poseSanskrit: {
+    color: '#A0AEC0',
+    fontSize: 14,
+    fontStyle: 'italic',
+    marginBottom: 20,
+  },
+  breathContainer: {
+    width: 160,
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  breathCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,107,53,0.2)',
+    borderWidth: 2,
+    borderColor: '#FF6B35',
+    position: 'absolute',
+  },
+  breathTextContainer: {
     alignItems: 'center',
   },
-  finishButton: {
-    backgroundColor: 'rgba(212, 168, 67, 0.2)',
-  },
-  controlButtonText: {
-    color: '#F7F4EF',
+  breathLabel: {
+    color: '#A0AEC0',
     fontSize: 14,
-    fontWeight: '600',
+    marginBottom: 4,
+  },
+  breathCount: {
+    color: '#FF6B35',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  cueText: {
+    color: '#A0AEC0',
+    fontSize: 13,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  bodyPartTag: {
+    backgroundColor: 'rgba(255,107,53,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    margin: 3,
+  },
+  bodyPartTagText: {
+    color: '#FF6B35',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  controlsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  sideButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+  },
+  disabledButton: {
+    opacity: 0.4,
+  },
+  centerButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FF6B35',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  poseStripContainer: {
+    paddingBottom: 16,
+    maxHeight: 80,
+  },
+  poseStripItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 6,
+    alignItems: 'center',
+    width: 70,
+  },
+  poseStripItemActive: {
+    backgroundColor: 'rgba(255,107,53,0.2)',
+    borderWidth: 1,
+    borderColor: '#FF6B35',
+  },
+  poseStripNumber: {
+    color: '#666',
+    fontSize: 10,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  poseStripNumberActive: {
+    color: '#FF6B35',
+  },
+  poseStripName: {
+    color: '#999',
+    fontSize: 8,
+    textAlign: 'center',
+  },
+  poseStripNameActive: {
+    color: '#F7F4EF',
   },
 });
