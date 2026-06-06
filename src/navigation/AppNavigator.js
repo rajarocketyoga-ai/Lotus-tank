@@ -8,6 +8,9 @@ import { ActivityIndicator, View } from 'react-native';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
+import MoodCheckInScreen from '../screens/MoodCheckInScreen';
+import SessionPlayerScreen from '../screens/SessionPlayerScreen';
+import PostSessionScreen from '../screens/PostSessionScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -19,10 +22,22 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
+const MainStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="MainTabs" component={MainTabs} />
+    <Stack.Screen name="MoodCheckIn" component={MoodCheckInScreen} />
+    <Stack.Screen name="SessionPlayer" component={SessionPlayerScreen} />
+    <Stack.Screen name="PostSession" component={PostSessionScreen} />
+  </Stack.Navigator>
+);
+
 const MainTabs = () => (
-  <Tab.Navigator>
+  <Tab.Navigator screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeScreen} />
-    {/* Add more tabs as needed: Breathing, Meditation, Movement */}
+    {/* Placeholder tabs for Explore, Progress, Profile as per wireframes */}
+    <Tab.Screen name="Explore" component={HomeScreen} /> 
+    <Tab.Screen name="Progress" component={HomeScreen} />
+    <Tab.Screen name="Profile" component={HomeScreen} />
   </Tab.Navigator>
 );
 
@@ -31,15 +46,15 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#3742fa" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A2A3A' }}>
+        <ActivityIndicator size="large" color="#4A90D9" />
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      {user ? <MainTabs /> : <AuthStack />}
+      {user ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }
