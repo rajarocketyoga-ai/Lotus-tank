@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useProfile } from '../context/ProfileContext';
+import { supabase } from '../lib/supabase';
 
 export default function PostSessionScreen({ navigation, route }) {
   const { session, preMood, postMood } = route.params;
   const { profile, updateXP, updateStreak } = useProfile();
   const [loading, setLoading] = useState(true);
   const [xpGained, setXpGained] = useState(0);
+  const [aiInsight, setAiInsight] = useState('');
+  const [aiLoading, setAiLoading] = useState(true);
 
   useEffect(() => {
     async function processRewards() {
@@ -22,7 +25,37 @@ export default function PostSessionScreen({ navigation, route }) {
     processRewards();
   }, []);
 
-  const getAIInsight = () => {
+  useEffect(() => {
+    async function getRealAIInsight() {
+      try {
+        setAiLoading(true);
+        const { data, error } = await supabase.functions.invoke('mindset-coach', {
+          body: {
+            preMood,
+            postMood,
+            sessionTitle: session.title,
+            sessionType: session.type,
+            niche: profile?.niche || 'general',
+            userName: profile?.username || profile?.email?.split('@')[0] || 'Warrior'
+          }
+        });
+
+        if (error) throw error;
+        setAiInsight(data.insight);
+      } catch (err) {
+        console.error('Error getting AI insight:', err);
+        setAiInsight(getFallbackInsight());
+      } finally {
+        setAiLoading(false);
+      }
+    }
+
+    if (profile && !loading) {
+      getRealAIInsight();
+    }
+  }, [profile, loading]);
+
+  const getFallbackInsight = () => {
     const shift = postMood - preMood;
     if (shift > 0) {
       return `Great work! Your mood improved from ${preMood} to ${postMood}. This session really helped you center yourself.`;
@@ -55,7 +88,11 @@ export default function PostSessionScreen({ navigation, route }) {
 
         <View style={styles.aiCard}>
           <Text style={styles.aiTitle}>🤖 AI Coach Insight</Text>
-          <Text style={styles.aiText}>{getAIInsight()}</Text>
+          {aiLoading ? (
+            <ActivityIndicator size="small" color="#4A90D9" />
+          ) : (
+            <Text style={styles.aiText}>{aiInsight}</Text>
+          )}
         </View>
 
         <TouchableOpacity 

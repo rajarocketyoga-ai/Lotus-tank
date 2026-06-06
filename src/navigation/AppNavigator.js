@@ -11,6 +11,7 @@ import HomeScreen from '../screens/HomeScreen';
 import MoodCheckInScreen from '../screens/MoodCheckInScreen';
 import SessionPlayerScreen from '../screens/SessionPlayerScreen';
 import PostSessionScreen from '../screens/PostSessionScreen';
+import AICoachScreen from '../screens/AICoachScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -28,6 +29,7 @@ const MainStack = () => (
     <Stack.Screen name="MoodCheckIn" component={MoodCheckInScreen} />
     <Stack.Screen name="SessionPlayer" component={SessionPlayerScreen} />
     <Stack.Screen name="PostSession" component={PostSessionScreen} />
+    <Stack.Screen name="AICoach" component={AICoachScreen} />
   </Stack.Navigator>
 );
 
