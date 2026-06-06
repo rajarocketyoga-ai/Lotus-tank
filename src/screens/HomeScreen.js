@@ -38,6 +38,13 @@ export default function HomeScreen({ navigation }) {
             <View style={[styles.xpBarFill, { width: `${(profile?.total_xp % 100) || 0}%` }]} />
           </View>
           <Text style={styles.xpText}>{100 - (profile?.total_xp % 100 || 0)} XP to next level</Text>
+          
+          <TouchableOpacity 
+            style={styles.coachButton} 
+            onPress={() => navigation.navigate('AICoach')}
+          >
+            <Text style={styles.coachButtonText}>👑 Daily Mindset Affirmation</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.challengeCard}>
@@ -134,6 +141,21 @@ const styles = StyleSheet.create({
   xpText: {
     color: '#A0AEC0',
     fontSize: 12,
+  },
+  coachButton: {
+    marginTop: 15,
+    backgroundColor: 'rgba(212, 168, 67, 0.2)',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D4A843',
+    alignItems: 'center',
+  },
+  coachButtonText: {
+    color: '#D4A843',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   challengeCard: {
     backgroundColor: '#F7F4EF',
