@@ -67,6 +67,18 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.sequenceBuilderButton}
+          onPress={() => navigation.navigate('SequenceBuilder')}
+        >
+          <Text style={styles.sequenceBuilderEmoji}>📋</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sequenceBuilderTitle}>Sequence Builder</Text>
+            <Text style={styles.sequenceBuilderDesc}>Create custom Rocket yoga flows</Text>
+          </View>
+          <Text style={styles.sequenceBuilderArrow}>→</Text>
+        </TouchableOpacity>
+
         <View style={styles.gardenPreview}>
           <Text style={styles.gardenTitle}>🌿 Mind Garden Mini</Text>
           <Text style={styles.gardenPlants}>🌱🌻🌱🌸🌱</Text>
@@ -200,6 +212,32 @@ const styles = StyleSheet.create({
   quickText: {
     color: '#F7F4EF',
     fontSize: 12,
+  },
+  sequenceBuilderButton: {
+    backgroundColor: '#FF6B35',
+    padding: 16,
+    borderRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sequenceBuilderEmoji: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  sequenceBuilderTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  sequenceBuilderDesc: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+  },
+  sequenceBuilderArrow: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   gardenPreview: {
     backgroundColor: 'rgba(123, 200, 164, 0.1)',
