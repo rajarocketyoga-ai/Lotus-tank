@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LotusTank — Premium Yoga Tank Tops</title>
+  <meta name="description" content="Premium yoga tank tops designed for hot yoga and vinyasa flow. Moisture-wicking, four-way stretch, anti-odor fabric that stays put through inversions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☸</text></svg>" />
+</head>
+<body>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="nav" id="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo">
+        <span class="nav-logo-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.17l-4-4 1.41-1.41L11 14.34l5.59-5.59L18 10.17l-7 7z"/>
+          </svg>
+        </span>
+        <span>LotusTank</span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#products">The Tank</a></li>
+        <li><a href="#story">Our Story</a></li>
+        <li><a href="#subscription">Subscribe</a></li>
+        <li><a href="#waitlist" class="btn btn-primary nav-cta">Join Waitlist</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===== Hero Section ===== -->
+  <section class="hero" id="waitlist">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Coming Soon — Join the Launch Waitlist
+        </div>
+
+        <h1 class="hero-title">
+          Rooted in practice.<br /><em>Flow in motion.</em>
+        </h1>
+
+        <p class="hero-description">
+          Engineered for hot yoga and vinyasa flow. Moisture-wicking, four-way stretch, anti-odor fabric that stays perfectly in place through every inversion.
+        </p>
+
+        <form class="email-form" id="email-form" action="#" method="post" novalidate>
+          <input type="email" name="email" id="email-input" placeholder="Enter your email" required aria-label="Email address" />
+          <button type="submit" class="btn btn-primary">Join the Waitlist</button>
+        </form>
+        <div class="form-message" id="form-message" style="display: none;"></div>
+
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-value">$48</div>
+            <div class="hero-stat-label">Starting at</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">4-Way</div>
+            <div class="hero-stat-label">Stretch fabric</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">Anti-odor</div>
+            <div class="hero-stat-label">Built for hot yoga</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-image-frame">
+          <img src="images/hero.jpg" alt="LotusTank yoga tank top" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+        <div class="hero-floating-card">
+          <div class="hero-floating-card-icon">✨</div>
+          <div>
+            <div class="hero-floating-card-text">Moisture-Wicking</div>
+            <div class="hero-floating-card-sub">Cool through every flow</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Products Section ===== -->
+  <section class="section products" id="products">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">The Collection</span>
+        <h2 class="section-title">Designed for the mat.</h2>
+        <p class="section-subtitle">Every tank is built with performance fabric that moves with your practice — from sun salutations to standing splits.</p>
+      </div>
+
+      <div class="product-grid">
+        <!-- Product 1 -->
+        <div class="product-card fade-in">
+          <div class="product-card-image">
+            <span class="product-card-badge">Best Seller</span>
+            <div class="product-emoji">👁️</div>
+            <div class="product-label">Drishti Racerback</div>
+          </div>
+          <div class="product-card-info">
+            <h3 class="product-card-name">The "Drishti" Racerback</h3>
+            <p class="product-card-desc">High-neck racerback with a tiny embroidered third-eye symbol. Maximum shoulder mobility.</p>
+            <div class="product-card-price">
+              <span class="price">$48</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="product-card fade-in">
+          <div class="product-card-image">
+            <div class="product-emoji">🔶</div>
+            <div class="product-label">Eight Limbs Panel</div>
+          </div>
+          <div class="product-card-info">
+            <h3 class="product-card-name">The "Eight Limbs" Panel Tank</h3>
+            <p class="product-card-desc">Charcoal body with terracotta mesh panels featuring 8 interlocking lotus petals.</p>
+            <div class="product-card-price">
+              <span class="price">$52</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="product-card fade-in">
+          <div class="product-card-image">
+            <span class="product-card-badge">Limited</span>
+            <div class="product-emoji">🌊</div>
+            <div class="product-label">Breath Wave Flow</div>
+          </div>
+          <div class="product-card-info">
+            <h3 class="product-card-name">The "Breath Wave" Flow Tank</h3>
+            <p class="product-card-desc">Loose breezy cut with dropped hem and subtle tonal wave patterns. Limited edition.</p>
+            <div class="product-card-price">
+              <span class="price">$55</span>
+              <span class="price-original">$65</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== About / Story Section ===== -->
+  <section class="section about" id="story">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-image fade-in">
+          <img src="images/product-mockup.png" alt="LotusTank product design" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+
+        <div class="about-text fade-in">
+          <span class="section-label">Our Story</span>
+          <h2 class="section-title">Made for the practice,<br />not the pose.</h2>
+          <p>
+            LotusTank was born on the mat — literally. After years of practicing hot yoga in tanks that stretched out, rode up, or smelled after one session, we decided to build something better.
+          </p>
+          <p>
+            Every LotusTank is engineered with premium moisture-wicking fabric, four-way stretch, and anti-odor technology. The cut is designed to stay put through inversions, the fabric breathes through the hottest flows, and the minimalist designs draw inspiration from yoga philosophy.
+          </p>
+          <p>
+            No logos plastered across your back. No baggy cotton that soaks through. Just you, your practice, and a tank that disappears so you can focus on what matters.
+          </p>
+
+          <div class="about-values">
+            <div class="about-value">
+              <span class="about-value-icon">🌱</span>
+              <div>
+                <h4>Sustainable Materials</h4>
+                <p>Eco-conscious fabric sourcing with recycled content</p>
+              </div>
+            </div>
+            <div class="about-value">
+              <span class="about-value-icon">🧘</span>
+              <div>
+                <h4>Practice-Tested</h4>
+                <p>Designed by yogis, tested in 105°F studios</p>
+              </div>
+            </div>
+            <div class="about-value">
+              <span class="about-value-icon">🎨</span>
+              <div>
+                <h4>Minimalist Design</h4>
+                <p>Subtle details inspired by yogic philosophy</p>
+              </div>
+            </div>
+            <div class="about-value">
+              <span class="about-value-icon">♻️</span>
+              <div>
+                <h4>Built to Last</h4>
+                <p>Premium quality that survives 200+ practices</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Subscription Teaser ===== -->
+  <section class="section subscription" id="subscription">
+    <div class="container">
+      <div class="subscription-content">
+        <div class="subscription-text fade-in">
+          <span class="section-label">Tank of the Month</span>
+          <h2 class="section-title">A new design.<br />Every month.</h2>
+          <p>
+            Join the Tank of the Month club and receive a limited-edition LotusTank shipped to your door each month. Exclusive designs you won't find anywhere else.
+          </p>
+
+          <div class="subscription-features">
+            <div class="subscription-feature">
+              <span class="subscription-feature-check">✓</span>
+              New limited design every month
+            </div>
+            <div class="subscription-feature">
+              <span class="subscription-feature-check">✓</span>
+              Early access to all new drops
+            </div>
+            <div class="subscription-feature">
+              <span class="subscription-feature-check">✓</span>
+              Cancel anytime — no commitment
+            </div>
+            <div class="subscription-feature">
+              <span class="subscription-feature-check">✓</span>
+              Free shipping on every tank
+            </div>
+          </div>
+
+          <div class="subscription-price">
+            <span class="subscription-price-amount">$40</span>
+            <span class="subscription-price-period">/ month</span>
+          </div>
+
+          <a href="#waitlist" class="btn btn-gold">Join the Waitlist →</a>
+        </div>
+
+        <div class="subscription-visual fade-in">
+          <div class="subscription-card">
+            <div class="subscription-card-header">
+              <h3>Coming Soon</h3>
+              <p>Preview of upcoming drops</p>
+            </div>
+            <div class="subscription-card-items">
+              <div class="subscription-card-item">
+                <span class="subscription-card-item-dot"></span>
+                <span class="subscription-card-item-name">June — "Sun Salutation"</span>
+                <span class="subscription-card-item-value">☀️</span>
+              </div>
+              <div class="subscription-card-item">
+                <span class="subscription-card-item-dot"></span>
+                <span class="subscription-card-item-name">July — "Lotus Bloom"</span>
+                <span class="subscription-card-item-value">🪷</span>
+              </div>
+              <div class="subscription-card-item">
+                <span class="subscription-card-item-dot"></span>
+                <span class="subscription-card-item-name">August — "Mountain Pose"</span>
+                <span class="subscription-card-item-value">⛰️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo" style="color: var(--color-white);">
+            <span class="nav-logo-icon">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.17l-4-4 1.41-1.41L11 14.34l5.59-5.59L18 10.17l-7 7z"/>
+              </svg>
+            </span>
+            LotusTank
+          </a>
+          <p>Premium yoga tank tops designed for hot yoga and vinyasa flow. Breathe. Move. Flow.</p>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Shop</h4>
+          <div class="footer-links">
+            <a href="#products">All Tanks</a>
+            <a href="#subscription">Tank of the Month</a>
+            <a href="#waitlist">Waitlist</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Company</h4>
+          <div class="footer-links">
+            <a href="#story">Our Story</a>
+            <a href="#">Sustainability</a>
+            <a href="#">Careers</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Support</h4>
+          <div class="footer-links">
+            <a href="#">Size Guide</a>
+            <a href="#">Shipping & Returns</a>
+            <a href="#">Contact</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2025 LotusTank. All rights reserved.</span>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram" title="Instagram">IG</a>
+          <a href="#" aria-label="TikTok" title="TikTok">TT</a>
+          <a href="#" aria-label="YouTube" title="YouTube">YT</a>
+          <a href="#" aria-label="Pinterest" title="Pinterest">Pi</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

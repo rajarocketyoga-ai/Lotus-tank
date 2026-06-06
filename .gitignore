@@ -1,0 +1,32 @@
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Environment ---
+.env
+.env.local
+.env.production
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# --- IDE ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Data (email signups — never commit live email data) ---
+data/waitlist.json
+# Empty .gitkeep keeps the directory structure in git
+data/.gitkeep
+
+# --- Logs ---
+*.log
+/tmp/
