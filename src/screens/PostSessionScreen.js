@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useProfile } from '../context/ProfileContext';
+import { supabase } from '../lib/supabase';
 
 export default function PostSessionScreen({ navigation, route }) {
   const { session, preMood, postMood } = route.params;
   const { profile, updateXP, updateStreak } = useProfile();
   const [loading, setLoading] = useState(true);
   const [xpGained, setXpGained] = useState(0);
+  const [aiInsight, setAiInsight] = useState('');
+  const [aiLoading, setAiLoading] = useState(true);
 
   useEffect(() => {
     async function processRewards() {
@@ -17,12 +20,93 @@ export default function PostSessionScreen({ navigation, route }) {
       setXpGained(total);
       await updateXP(total);
       await updateStreak();
+      
+      // Garden Growth Logic
+      await handleGardenGrowth();
+      
       setLoading(false);
     }
     processRewards();
   }, []);
 
-  const getAIInsight = () => {
+  const handleGardenGrowth = async () => {
+    try {
+      // 1. Fetch current plants
+      const { data: plants } = await supabase
+        .from('garden_plants')
+        .select('*')
+        .eq('user_id', profile.id);
+
+      if (!plants || plants.length === 0) {
+        // Plant first seed at index 4 (center)
+        await supabase.from('garden_plants').insert({
+          user_id: profile.id,
+          plant_type: 'lotus',
+          growth_stage: 1,
+          position_index: 4
+        });
+      } else {
+        // Pick a random plant to grow, or plant a new one
+        const shouldPlantNew = plants.length < 9 && Math.random() > 0.7;
+        
+        if (shouldPlantNew) {
+          const occupiedIndices = plants.map(p => p.position_index);
+          const availableIndices = Array.from({length: 9}, (_, i) => i).filter(i => !occupiedIndices.includes(i));
+          const nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+          
+          await supabase.from('garden_plants').insert({
+            user_id: profile.id,
+            plant_type: 'lotus',
+            growth_stage: 1,
+            position_index: nextIndex
+          });
+        } else {
+          // Grow an existing plant
+          const plantToGrow = plants[Math.floor(Math.random() * plants.length)];
+          if (plantToGrow.growth_stage < 5) {
+            await supabase
+              .from('garden_plants')
+              .update({ growth_stage: plantToGrow.growth_stage + 1 })
+              .eq('id', plantToGrow.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Garden growth error:', err);
+    }
+  };
+
+  useEffect(() => {
+    async function getRealAIInsight() {
+      try {
+        setAiLoading(true);
+        const { data, error } = await supabase.functions.invoke('mindset-coach', {
+          body: {
+            preMood,
+            postMood,
+            sessionTitle: session.title,
+            sessionType: session.type,
+            niche: profile?.niche || 'general',
+            userName: profile?.username || profile?.email?.split('@')[0] || 'Warrior'
+          }
+        });
+
+        if (error) throw error;
+        setAiInsight(data.insight);
+      } catch (err) {
+        console.error('Error getting AI insight:', err);
+        setAiInsight(getFallbackInsight());
+      } finally {
+        setAiLoading(false);
+      }
+    }
+
+    if (profile && !loading) {
+      getRealAIInsight();
+    }
+  }, [profile, loading]);
+
+  const getFallbackInsight = () => {
     const shift = postMood - preMood;
     if (shift > 0) {
       return `Great work! Your mood improved from ${preMood} to ${postMood}. This session really helped you center yourself.`;
@@ -55,7 +139,11 @@ export default function PostSessionScreen({ navigation, route }) {
 
         <View style={styles.aiCard}>
           <Text style={styles.aiTitle}>🤖 AI Coach Insight</Text>
-          <Text style={styles.aiText}>{getAIInsight()}</Text>
+          {aiLoading ? (
+            <ActivityIndicator size="small" color="#4A90D9" />
+          ) : (
+            <Text style={styles.aiText}>{aiInsight}</Text>
+          )}
         </View>
 
         <TouchableOpacity 
