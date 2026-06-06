@@ -20,10 +20,61 @@ export default function PostSessionScreen({ navigation, route }) {
       setXpGained(total);
       await updateXP(total);
       await updateStreak();
+      
+      // Garden Growth Logic
+      await handleGardenGrowth();
+      
       setLoading(false);
     }
     processRewards();
   }, []);
+
+  const handleGardenGrowth = async () => {
+    try {
+      // 1. Fetch current plants
+      const { data: plants } = await supabase
+        .from('garden_plants')
+        .select('*')
+        .eq('user_id', profile.id);
+
+      if (!plants || plants.length === 0) {
+        // Plant first seed at index 4 (center)
+        await supabase.from('garden_plants').insert({
+          user_id: profile.id,
+          plant_type: 'lotus',
+          growth_stage: 1,
+          position_index: 4
+        });
+      } else {
+        // Pick a random plant to grow, or plant a new one
+        const shouldPlantNew = plants.length < 9 && Math.random() > 0.7;
+        
+        if (shouldPlantNew) {
+          const occupiedIndices = plants.map(p => p.position_index);
+          const availableIndices = Array.from({length: 9}, (_, i) => i).filter(i => !occupiedIndices.includes(i));
+          const nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+          
+          await supabase.from('garden_plants').insert({
+            user_id: profile.id,
+            plant_type: 'lotus',
+            growth_stage: 1,
+            position_index: nextIndex
+          });
+        } else {
+          // Grow an existing plant
+          const plantToGrow = plants[Math.floor(Math.random() * plants.length)];
+          if (plantToGrow.growth_stage < 5) {
+            await supabase
+              .from('garden_plants')
+              .update({ growth_stage: plantToGrow.growth_stage + 1 })
+              .eq('id', plantToGrow.id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Garden growth error:', err);
+    }
+  };
 
   useEffect(() => {
     async function getRealAIInsight() {

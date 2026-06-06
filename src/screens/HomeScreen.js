@@ -74,10 +74,13 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.gardenPreview}>
+        <TouchableOpacity 
+          style={styles.gardenPreview} 
+          onPress={() => navigation.navigate('Progress')}
+        >
           <Text style={styles.gardenTitle}>🌿 Mind Garden Mini</Text>
           <Text style={styles.gardenPlants}>🌱🌻🌱🌸🌱</Text>
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
