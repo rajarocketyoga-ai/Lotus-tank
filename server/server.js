@@ -183,11 +183,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// --- Start server ---
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🧘 LotusTank server running!`);
-  console.log(`   🌐 Website: http://0.0.0.0:${PORT}`);
-  console.log(`   📧 API:     http://0.0.0.0:${PORT}/api/waitlist`);
-  console.log(`   📊 Count:   http://0.0.0.0:${PORT}/api/waitlist/count`);
-  console.log(`   💚 Health:  http://0.0.0.0:${PORT}/api/health\n`);
-});
+// --- Start server (only for local dev) ---
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🧘 LotusTank server running!`);
+    console.log(`   🌐 Website: http://0.0.0.0:${PORT}`);
+    console.log(`   📧 API:     http://0.0.0.0:${PORT}/api/waitlist`);
+    console.log(`   📊 Count:   http://0.0.0.0:${PORT}/api/waitlist/count`);
+    console.log(`   💚 Health:  http://0.0.0.0:${PORT}/api/health\n`);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
