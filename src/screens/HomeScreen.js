@@ -1,14 +1,37 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, FlatList, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getDailyChallenge } from '../data/sessions';
+import { loadSequences } from '../services/sequenceStorage';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const { profile, loading } = useProfile();
   const dailyChallenge = getDailyChallenge(profile?.niche || 'general');
+  const [savedSequences, setSavedSequences] = useState([]);
+  const [loadingSequences, setLoadingSequences] = useState(true);
+
+  useEffect(() => {
+    fetchSequences();
+  }, []);
+
+  const fetchSequences = async () => {
+    setLoadingSequences(true);
+    const seqs = await loadSequences(user?.id);
+    setSavedSequences(seqs.slice(0, 5)); // Show latest 5
+    setLoadingSequences(false);
+  };
+
+  // Refresh when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchSequences();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -78,6 +101,49 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Text style={styles.sequenceBuilderArrow}>→</Text>
         </TouchableOpacity>
+
+        {/* My Sequences Section */}
+        <View style={styles.mySequencesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>📋 My Sequences</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SequenceBuilder')}>
+              <Text style={styles.viewAllLink}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loadingSequences ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#FF6B35" />
+            </View>
+          ) : savedSequences.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No saved sequences yet</Text>
+              <Text style={styles.emptySubtext}>Build your first Rocket flow!</Text>
+            </View>
+          ) : (
+            <View>
+              {savedSequences.map((seq, index) => (
+                <TouchableOpacity
+                  key={seq.id || index}
+                  onPress={() => navigation.navigate('SequenceBuilder')}
+                  style={styles.sequenceListItem}
+                >
+                  <View style={styles.sequenceIcon}>
+                    <Text style={styles.sequenceIconText}>🧘</Text>
+                  </View>
+                  <View style={styles.sequenceInfo}>
+                    <Text style={styles.sequenceName}>{seq.name}</Text>
+                    <Text style={styles.sequenceMeta}>
+                      {seq.poses?.length || 0} poses · {seq.totalDuration || 0} breaths
+                      {seq.cloud ? ' · ☁️' : ' · 📱'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#999" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
 
         <View style={styles.gardenPreview}>
           <Text style={styles.gardenTitle}>🌿 Mind Garden Mini</Text>
@@ -238,6 +304,70 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  mySequencesSection: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  viewAllLink: {
+    color: '#FF6B35',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  emptyState: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#A0AEC0',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptySubtext: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  sequenceListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 6,
+  },
+  sequenceIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,107,53,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sequenceIconText: {
+    fontSize: 18,
+  },
+  sequenceInfo: {
+    flex: 1,
+  },
+  sequenceName: {
+    color: '#F7F4EF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  sequenceMeta: {
+    color: '#A0AEC0',
+    fontSize: 11,
+    marginTop: 2,
   },
   gardenPreview: {
     backgroundColor: 'rgba(123, 200, 164, 0.1)',

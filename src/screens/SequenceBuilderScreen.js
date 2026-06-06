@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,16 @@ import {
   Modal,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { POSES, ROCKET_SEQUENCES, BODY_PARTS, searchPoses } from '../data/poses';
 import { getModifications, getExperienceGuidance } from '../engine/modificationEngine';
+import { saveSequence, loadSequences, deleteSequence } from '../services/sequenceStorage';
+import { useAuth } from '../context/AuthContext';
 
 export default function SequenceBuilderScreen({ navigation }) {
+  const { user } = useAuth();
   const [sequenceName, setSequenceName] = useState('My Rocket Sequence');
   const [poses, setPoses] = useState([]);
   const [selectedSequence, setSelectedSequence] = useState(0);
@@ -24,6 +28,10 @@ export default function SequenceBuilderScreen({ navigation }) {
   const [showPosePicker, setShowPosePicker] = useState(false);
   const [poseSearch, setPoseSearch] = useState('');
   const [bodyPartFilter, setBodyPartFilter] = useState('');
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [savedSequences, setSavedSequences] = useState([]);
+  const [isLoadingSequences, setIsLoadingSequences] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const addPose = useCallback((pose) => {
     setPoses(prev => [...prev, { ...pose, duration: 5, key: `${pose.english_name}-${Date.now()}` }]);
@@ -78,24 +86,77 @@ export default function SequenceBuilderScreen({ navigation }) {
 
   const totalDuration = poses.reduce((sum, p) => sum + (p.duration || 5), 0);
 
+  // Load saved sequences from storage
+  const fetchSavedSequences = useCallback(async () => {
+    setIsLoadingSequences(true);
+    const sequences = await loadSequences(user?.id);
+    setSavedSequences(sequences);
+    setIsLoadingSequences(false);
+  }, [user]);
+
+  // Open load modal and fetch sequences
+  const openLoadModal = useCallback(() => {
+    setShowLoadModal(true);
+    fetchSavedSequences();
+  }, [fetchSavedSequences]);
+
+  // Build sequence data object
+  const buildSequenceData = useCallback(() => ({
+    id: `${Date.now()}`,
+    name: sequenceName,
+    rocketSequence: selectedSequence,
+    experienceLevel,
+    filters: activeFilters,
+    poses: poses.map((p, i) => ({
+      order: i + 1,
+      english_name: p.english_name,
+      sanskrit_name: p.sanskrit_name,
+      duration: p.duration || 5,
+      target_body_parts: p.target_body_parts,
+    })),
+    totalDuration,
+    createdAt: new Date().toISOString(),
+  }), [sequenceName, selectedSequence, experienceLevel, activeFilters, poses, totalDuration]);
+
+  // Save sequence to cloud/local storage
+  const handleSave = useCallback(async () => {
+    if (poses.length === 0) {
+      Alert.alert('Empty Sequence', 'Add at least one pose before saving.');
+      return;
+    }
+    setIsSaving(true);
+    const sequence = buildSequenceData();
+    const result = await saveSequence(sequence, user?.id);
+    setIsSaving(false);
+    if (result.success) {
+      Alert.alert('Sequence Saved', `"${sequenceName}" saved with ${poses.length} poses and ${totalDuration} total breaths.`);
+    } else {
+      Alert.alert('Save Error', 'Could not save the sequence. Please try again.');
+    }
+  }, [buildSequenceData, sequenceName, poses.length, totalDuration, user]);
+
+  // Load a sequence from the saved list
+  const handleLoadSequence = useCallback((seq) => {
+    setSequenceName(seq.name || 'Loaded Sequence');
+    setPoses(seq.poses.map((p, i) => ({
+      ...p,
+      key: `${p.english_name}-${Date.now()}-${i}`,
+    })));
+    setShowLoadModal(false);
+  }, []);
+
+  // Delete a saved sequence
+  const handleDeleteSequence = useCallback(async (seq) => {
+    await deleteSequence(seq.id, seq.cloud);
+    fetchSavedSequences();
+  }, [fetchSavedSequences]);
+
+  // Export sequence as JSON alert (existing functionality)
   const handleExport = useCallback(() => {
-    const sequence = {
-      name: sequenceName,
-      rocketSequence: selectedSequence,
-      experienceLevel,
-      filters: activeFilters,
-      poses: poses.map((p, i) => ({
-        order: i + 1,
-        english_name: p.english_name,
-        sanskrit_name: p.sanskrit_name,
-        duration: p.duration || 5,
-        target_body_parts: p.target_body_parts,
-      })),
-      totalDuration,
-      createdAt: new Date().toISOString(),
-    };
-    Alert.alert('Sequence Saved', `"${sequenceName}" exported with ${poses.length} poses and ${totalDuration} total breaths.`);
-  }, [sequenceName, selectedSequence, experienceLevel, activeFilters, poses, totalDuration]);
+    const sequence = buildSequenceData();
+    Alert.alert('Sequence Data', JSON.stringify(sequence, null, 2).substring(0, 500) + '...\n\n(Full JSON logged to console)');
+    console.log('Exported Sequence:', JSON.stringify(sequence, null, 2));
+  }, [buildSequenceData]);
 
   const renderPoseItem = ({ item, index }) => (
     <View style={{
@@ -281,23 +342,40 @@ export default function SequenceBuilderScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving}
+            style={{
+              backgroundColor: '#004E89', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12,
+              alignItems: 'center', flexDirection: 'row',
+            }}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+            )}
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13, marginLeft: 4 }}>Save</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={openLoadModal}
+            style={{
+              backgroundColor: '#1A659E', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12,
+              alignItems: 'center', flexDirection: 'row',
+            }}
+          >
+            <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13, marginLeft: 4 }}>Load</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             onPress={() => setPoses([])}
             style={{
-              backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12,
+              backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12,
               borderWidth: 1, borderColor: '#ddd', alignItems: 'center',
             }}
           >
             <Ionicons name="trash-outline" size={18} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleExport}
-            style={{
-              backgroundColor: '#004E89', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12,
-              alignItems: 'center',
-            }}
-          >
-            <Ionicons name="download-outline" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -390,6 +468,82 @@ export default function SequenceBuilderScreen({ navigation }) {
             )}
             contentContainerStyle={{ paddingBottom: 40 }}
           />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Load Sequence Modal */}
+      <Modal visible={showLoadModal} animationType="slide">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F3EE' }}>
+          <View style={{ padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#2C2C2C' }}>My Sequences</Text>
+              <TouchableOpacity onPress={() => setShowLoadModal(false)}>
+                <Ionicons name="close" size={24} color="#2C2C2C" />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+              {savedSequences.length} saved sequence{savedSequences.length !== 1 ? 's' : ''}
+              {savedSequences.some(s => s.cloud) ? ' • Cloud sync active' : ' • Local storage'}
+            </Text>
+          </View>
+
+          {isLoadingSequences ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color="#FF6B35" />
+              <Text style={{ color: '#999', marginTop: 8 }}>Loading sequences...</Text>
+            </View>
+          ) : savedSequences.length === 0 ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+              <Ionicons name="cloud-outline" size={48} color="#ddd" />
+              <Text style={{ color: '#999', fontSize: 14, marginTop: 12, textAlign: 'center' }}>
+                No saved sequences yet.{'\n'}Build and save a sequence to see it here.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={savedSequences}
+              keyExtractor={(item, idx) => item.id || `${idx}`}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => handleLoadSequence(item)}
+                  style={{
+                    paddingHorizontal: 16, paddingVertical: 14,
+                    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: '600', fontSize: 14, color: '#2C2C2C' }}>
+                      {item.name}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+                      {item.poses?.length || 0} poses · {item.totalDuration || 0} breaths
+                      {item.cloud ? ' ☁️' : ' 📱'}
+                    </Text>
+                    {item.createdAt && (
+                      <Text style={{ fontSize: 10, color: '#ccc', marginTop: 2 }}>
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Alert.alert('Delete Sequence', `Delete "${item.name}"?`, [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteSequence(item) },
+                      ]);
+                    }}
+                    style={{ padding: 8 }}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#ccc" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingBottom: 40 }}
+            />
+          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
